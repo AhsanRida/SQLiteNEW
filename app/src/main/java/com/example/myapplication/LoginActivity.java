@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
         signupButton = findViewById(R.id.signUpNow);
 
         sharedPreferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-
+        signupButton.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignUpActivity.class)));
         loginButton.setOnClickListener(v -> {
             String email = loginEmail.getText().toString().trim();
             String password = loginPassword.getText().toString().trim();
