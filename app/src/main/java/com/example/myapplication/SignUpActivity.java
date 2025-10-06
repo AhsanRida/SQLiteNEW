@@ -59,6 +59,10 @@ public class SignUpActivity extends AppCompatActivity {
             editor.putBoolean("isLoggedIn", true);
             editor.apply();
 
+            long fakeUserId = System.currentTimeMillis() % 1000000L;
+            sharedPreferences.edit().putLong("user_id", fakeUserId).apply();
+            getSharedPreferences("app_prefs", MODE_PRIVATE).edit().putLong("user_id", fakeUserId).apply();
+
             Toast.makeText(this, "Sign up successful!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(SignUpActivity.this, WelcomeActivity.class));
             finish();

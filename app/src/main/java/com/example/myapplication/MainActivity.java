@@ -22,17 +22,13 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent;
         if (userId > 0) {
-            // user already signed in -> go to dashboard/welcome
             intent = new Intent(MainActivity.this, WelcomeActivity.class);
         } else {
-            // no user -> open login screen
             intent = new Intent(MainActivity.this, LoginActivity.class);
         }
 
-        // Clear backstack so user cannot navigate back to this splash
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        // finish MainActivity so it doesn't remain
         finish();
     }
 }

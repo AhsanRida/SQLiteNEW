@@ -30,7 +30,9 @@ public class LoginActivity extends AppCompatActivity {
         signupButton = findViewById(R.id.signUpNow);
 
         sharedPreferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+
         signupButton.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignUpActivity.class)));
+
         loginButton.setOnClickListener(v -> {
             String email = loginEmail.getText().toString().trim();
             String password = loginPassword.getText().toString().trim();
@@ -44,18 +46,16 @@ public class LoginActivity extends AppCompatActivity {
             String savedPassword = sharedPreferences.getString("password", "");
 
             if (email.equals(savedEmail) && password.equals(savedPassword)) {
-                // ✅ Uses latest updated password
                 Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
+
+                long userId = sharedPreferences.getLong("user_id", -1L);
+                getSharedPreferences("app_prefs", MODE_PRIVATE).edit().putLong("user_id", userId).apply();
+
                 startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
                 finish();
             } else {
                 Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
             }
         });
-
-        signupButton.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-        });
     }
 }
-
