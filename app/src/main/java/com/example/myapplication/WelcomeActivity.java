@@ -12,6 +12,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+import android.util.Pair;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+
+import java.text.SimpleDateFormat;
 
 public class WelcomeActivity extends AppCompatActivity {
 
@@ -21,6 +37,10 @@ public class WelcomeActivity extends AppCompatActivity {
     DBHelper dbHelper;
     TransactionAdapter adapter;
     long userId;
+
+    LineChart chartMonthlyNet;
+    PieChart chartCategoryPie;
+    SimpleDateFormat monthFmt = new SimpleDateFormat("MMM yy", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +53,9 @@ public class WelcomeActivity extends AppCompatActivity {
         btnAddTxn = findViewById(R.id.btnAddTxn);
         rvRecent = findViewById(R.id.rvRecent);
 
+        chartMonthlyNet = findViewById(R.id.chartMonthlyNet);
+        chartCategoryPie = findViewById(R.id.chartCategoryPie);
+
         dbHelper = new DBHelper(this);
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         userId = prefs.getLong("user_id", -1L);
@@ -42,12 +65,16 @@ public class WelcomeActivity extends AppCompatActivity {
         rvRecent.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TransactionAdapter(this);
         rvRecent.setAdapter(adapter);
+
+        initCharts();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         refreshDashboard();
+
+        loadCharts();
     }
 
     private void refreshDashboard() {
@@ -70,12 +97,84 @@ public class WelcomeActivity extends AppCompatActivity {
             if (t.isExpense()) expense += t.getAmount();
             else income += t.getAmount();
         }
-        tvTotalIncome.setText(String.format("Income: %.2f", income));
-        tvTotalExpense.setText(String.format("Expense: %.2f", expense));
-        tvNet.setText(String.format("Net: %.2f", net));
+        tvTotalIncome.setText(String.format(Locale.getDefault(), "Income: %.2f", income));
+        tvTotalExpense.setText(String.format(Locale.getDefault(), "Expense: %.2f", expense));
+        tvNet.setText(String.format(Locale.getDefault(), "Net: %.2f", net));
 
         long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
         List<Transaction> recent = dbHelper.getTransactions(userId, thirtyDaysAgo, System.currentTimeMillis());
         adapter.setTransactions(recent);
+    }
+
+    // =======================
+    // chart helpers
+    // =======================
+    private void initCharts() {
+        if (chartMonthlyNet != null) {
+            chartMonthlyNet.getAxisRight().setEnabled(false);
+            chartMonthlyNet.getDescription().setEnabled(false);
+            chartMonthlyNet.getLegend().setForm(Legend.LegendForm.LINE);
+            chartMonthlyNet.getXAxis().setGranularity(1f);
+        }
+
+        if (chartCategoryPie != null) {
+            Description d = new Description();
+            d.setText("");
+            chartCategoryPie.setDescription(d);
+            chartCategoryPie.setUsePercentValues(false);
+            chartCategoryPie.getLegend().setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        }
+    }
+
+    private void loadCharts() {
+        if (userId < 0) return;
+
+        // 1) Monthly Net (last 6 months) with 3-mo moving average
+        List<Pair<Long, Double>> months = MathEcon.monthlyNetSeries(dbHelper, userId, 6);
+        List<Pair<Long, Double>> ma = MathEcon.movingAverage(months, 3);
+
+        if (chartMonthlyNet != null) {
+            List<Entry> netEntries = new java.util.ArrayList<>();
+            List<Entry> maEntries  = new java.util.ArrayList<>();
+
+            for (int i = 0; i < months.size(); i++) {
+                netEntries.add(new Entry(i, months.get(i).second.floatValue()));
+                maEntries.add(new Entry(i, ma.get(i).second.floatValue()));
+            }
+
+            LineDataSet dsNet = new LineDataSet(netEntries, "Monthly Net");
+            dsNet.setCircleRadius(3f);
+            dsNet.setLineWidth(2.2f);
+
+            LineDataSet dsMA = new LineDataSet(maEntries, "3-mo Avg");
+            dsMA.setCircleRadius(0f);
+            dsMA.setLineWidth(2.0f);
+            dsMA.setDrawCircles(false);
+            dsMA.enableDashedLine(10f, 6f, 0f);
+
+            chartMonthlyNet.setData(new LineData(dsNet, dsMA));
+            chartMonthlyNet.getXAxis().setValueFormatter(new ValueFormatter() {
+                @Override
+                public String getAxisLabel(float value, AxisBase axis) {
+                    int idx = Math.max(0, Math.min(months.size() - 1, (int) value));
+                    return monthFmt.format(new java.util.Date(months.get(idx).first));
+                }
+            });
+
+            chartMonthlyNet.invalidate();
+        }
+
+        // 2) Pie: current month expenses by category
+        if (chartCategoryPie != null) {
+            List<Pair<String, Double>> cats = MathEcon.currentMonthCategoryExpenseModel(dbHelper, userId);
+            List<PieEntry> pieEntries = new java.util.ArrayList<>();
+            for (Pair<String, Double> p : cats) {
+                if (p.second > 0) pieEntries.add(new PieEntry(p.second.floatValue(), p.first));
+            }
+            PieDataSet pds = new PieDataSet(pieEntries, "Expenses by Category");
+            pds.setSliceSpace(2f);
+            chartCategoryPie.setData(new PieData(pds));
+            chartCategoryPie.invalidate();
+        }
     }
 }
