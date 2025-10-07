@@ -31,7 +31,7 @@ import java.text.SimpleDateFormat;
 
 public class WelcomeActivity extends AppCompatActivity {
 
-    TextView tvTotalIncome, tvTotalExpense, tvNet;
+    TextView tvTotalIncome, tvTotalExpense, tvNet, tvNetWorth;
     Button btnAddTxn;
     RecyclerView rvRecent;
     DBHelper dbHelper;
@@ -50,6 +50,7 @@ public class WelcomeActivity extends AppCompatActivity {
         tvTotalIncome = findViewById(R.id.tvTotalIncome);
         tvTotalExpense = findViewById(R.id.tvTotalExpense);
         tvNet = findViewById(R.id.tvNet);
+        tvNetWorth = findViewById(R.id.tvNetWorth);
         btnAddTxn = findViewById(R.id.btnAddTxn);
         rvRecent = findViewById(R.id.rvRecent);
 
@@ -97,14 +98,58 @@ public class WelcomeActivity extends AppCompatActivity {
             if (t.isExpense()) expense += t.getAmount();
             else income += t.getAmount();
         }
+        Calendar prevStart = Calendar.getInstance();
+        prevStart.add(Calendar.MONTH, -1);
+        prevStart.set(Calendar.DAY_OF_MONTH, 1);
+        prevStart.set(Calendar.HOUR_OF_DAY, 0);
+        prevStart.set(Calendar.MINUTE, 0);
+        prevStart.set(Calendar.SECOND, 0);
+        prevStart.set(Calendar.MILLISECOND, 0);
+
+        Calendar prevEnd = Calendar.getInstance();
+        prevEnd.add(Calendar.MONTH, -1);
+        prevEnd.set(Calendar.DAY_OF_MONTH, prevEnd.getActualMaximum(Calendar.DAY_OF_MONTH));
+        prevEnd.set(Calendar.HOUR_OF_DAY, 23);
+        prevEnd.set(Calendar.MINUTE, 59);
+        prevEnd.set(Calendar.SECOND, 59);
+        prevEnd.set(Calendar.MILLISECOND, 999);
+
+        double prevNet = dbHelper.getNetProfit(userId, prevStart.getTimeInMillis(), prevEnd.getTimeInMillis());
+        double momPct = MathEcon.percentageIncrease(prevNet, net);
         tvTotalIncome.setText(String.format(Locale.getDefault(), "Income: %.2f", income));
         tvTotalExpense.setText(String.format(Locale.getDefault(), "Expense: %.2f", expense));
-        tvNet.setText(String.format(Locale.getDefault(), "Net: %.2f", net));
+        tvNet.setText(String.format(
+                Locale.getDefault(),
+                "Net: %.2f  (MoM: %.1f%%)",
+                net, momPct));
+        // ----- Assets & Liabilities from SharedPreferences (example keys) -----
+        SharedPreferences prefsAL = getSharedPreferences("finance_inputs", MODE_PRIVATE);
+
+// Example: read saved values (default to 0 if not set)
+        double cash        = Double.longBitsToDouble(prefsAL.getLong("assets_cash",        Double.doubleToLongBits(0)));
+        double investments = Double.longBitsToDouble(prefsAL.getLong("assets_investments", Double.doubleToLongBits(0)));
+        double property    = Double.longBitsToDouble(prefsAL.getLong("assets_property",    Double.doubleToLongBits(0)));
+
+        double loans       = Double.longBitsToDouble(prefsAL.getLong("liab_loans",         Double.doubleToLongBits(0)));
+        double mortgage    = Double.longBitsToDouble(prefsAL.getLong("liab_mortgage",      Double.doubleToLongBits(0)));
+        double bills       = Double.longBitsToDouble(prefsAL.getLong("liab_bills",         Double.doubleToLongBits(0)));
+
+// Totals via MathEcon helpers
+        double totalAssets      = MathEcon.totalAssets(cash, investments, property);
+        double totalLiabilities = MathEcon.totalLiabilities(loans, mortgage, bills);
+        double netWorth         = totalAssets - totalLiabilities;
+
+// Show it
+        if (tvNetWorth != null) {
+            tvNetWorth.setText(String.format(Locale.getDefault(), "Net Worth: %.2f", netWorth));
+        }
 
         long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
         List<Transaction> recent = dbHelper.getTransactions(userId, thirtyDaysAgo, System.currentTimeMillis());
         adapter.setTransactions(recent);
-    }
+
+
+}
 
     // =======================
     // chart helpers

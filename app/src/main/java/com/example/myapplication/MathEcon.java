@@ -252,4 +252,42 @@ public final class MathEcon {
         e.set(Calendar.MILLISECOND, 999);
         return expenseByCategoryList(db, userId, s.getTimeInMillis(), e.getTimeInMillis());
     }
+    // -----------------------
+// Basic finance formulas
+// -----------------------
+
+    /** Percentage Loss = (Purchase Price - Sale Price) / Purchase Price * 100 */
+    public static double percentageLoss(double purchasePrice, double salePrice) {
+        if (purchasePrice == 0) return 0; // avoid /0; define as 0 by convention
+        return ((purchasePrice - salePrice) / purchasePrice) * 100.0;
+    }
+
+    /** Percentage Increase = ((Final Value - Initial Value) / Initial Value) * 100 */
+    public static double percentageIncrease(double initialValue, double finalValue) {
+        if (initialValue == 0) return (finalValue > 0 ? 100.0 : 0.0); // define convention for 0→positive
+        return ((finalValue - initialValue) / initialValue) * 100.0;
+    }
+
+    /** Sum helper that ignores nulls and NaNs. */
+    private static double safeSum(double... values) {
+        double sum = 0.0;
+        if (values == null) return 0.0;
+        for (double v : values) {
+            if (!Double.isNaN(v) && !Double.isInfinite(v)) sum += v;
+        }
+        return sum;
+    }
+
+    /** Total Liabilities = Loans + Mortgage + Bills + ... */
+    public static double totalLiabilities(double... items) {
+        return safeSum(items);
+    }
+
+    /** Total Assets = Cash + Investments + Property + ... */
+    public static double totalAssets(double... items) {
+        return safeSum(items);
+    }
+    public static String fmtPct(double v) { return String.format(java.util.Locale.getDefault(), "%.1f%%", v); }
+    public static String fmtMoney(double v) { return String.format(java.util.Locale.getDefault(), "%.2f", v); }
+
 }
