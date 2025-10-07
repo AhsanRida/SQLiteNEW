@@ -56,17 +56,20 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
 
+    <!-- IMPORTANT: use the FULL class name, not mikeview -->
+
     <Button
         android:id="@+id/btnAddTxn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="76dp"
         android:text="Add Transaction"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/tvTotalIncome"
+        android:backgroundTint="#1C432A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- IMPORTANT: use the FULL class name, not mikeview -->
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chartMonthlyNet"
         android:layout_width="0dp"

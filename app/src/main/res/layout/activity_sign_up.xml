@@ -31,14 +31,14 @@
         android:id="@+id/createAcntTxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Create Your Account"
+        android:textColor="#1C432A"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#1D88B9"
-        app:layout_constraintTop_toBottomOf="@id/logoImg"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logoImg" />
 
     <!-- Name input -->
     <EditText
@@ -105,15 +105,15 @@
         android:id="@+id/createAcntButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:backgroundTint="#1D88B9"
-        android:text="Create Account"
-        android:textSize="18sp"
-        android:textColor="#FFFFFF"
-        app:layout_constraintTop_toBottomOf="@id/signUpConfirmPassword"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginTop="24dp"/>
+        android:backgroundTint="#1C432A"
+        android:text="Create Account"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signUpConfirmPassword" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
