@@ -41,9 +41,12 @@
 
     <Button
         android:id="@+id/btnSaveTransaction"
-        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
         android:text="Save"
-        app:layout_constraintTop_toBottomOf="@id/etNote"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp"/>
+        app:iconTint="#1C432A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etNote" />
 </androidx.constraintlayout.widget.ConstraintLayout>

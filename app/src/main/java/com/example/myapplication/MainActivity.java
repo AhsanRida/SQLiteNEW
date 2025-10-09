@@ -3,6 +3,8 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,11 +23,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Set the layout with the Drawer and Toolbar
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_welcome);
 
         // --- Initialize Toolbar and Drawer ---
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        Toolbar mytoolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(mytoolbar);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this,
                 drawerLayout,
-                toolbar,
+                mytoolbar,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
         );
@@ -78,14 +80,21 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_item, menu); // main_menu is the name of your menu resource file
+        return true;
+    }
 
 //    @Override
-//    public void onBackPressed() {
-//        // Close the drawer if open before exiting the app
-//        if (drawerLayout.isDrawerOpen(navigationView)) {
-//            drawerLayout.closeDrawer(navigationView);
-//        } else {
-//            super.onBackPressed();
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        if (item.getItemId() == R.id.activity_) {
+//            // Handle settings action
+//            return true;
+//        } else if (item.getItemId() == R.id.action_share) {
+//            // Handle share action
+//            return true;
 //        }
+//        return super.onOptionsItemSelected(item);
 //    }
 }
