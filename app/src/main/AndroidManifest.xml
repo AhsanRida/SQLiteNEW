@@ -14,7 +14,7 @@
 
     <!-- Launcher Activity -->
     <activity
-        android:name=".SignUpActivity"
+        android:name=".WelcomeActivity"
 
         android:exported="true">
         <!--        switch above line with .LoginActivity when demoing app-->
@@ -26,10 +26,9 @@
     </activity>
 
     <!-- Other Activities -->
-    <activity android:name=".WelcomeActivity" android:exported="false"/>
+    <activity android:name=".SignUpActivity" android:exported="false"/>
     <activity android:name=".LoginActivity" android:exported="false"/>
-    <activity android:name=".AddTransactionActivity" android:exported="false"/>
-
+        <activity android:name=".AddTransactionActivity" android:exported="false"/>
 
 
     </application>

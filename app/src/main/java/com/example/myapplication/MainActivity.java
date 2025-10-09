@@ -21,13 +21,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Set the layout with the Drawer and Toolbar
-        setContentView(R.layout.activity_sign_up);
+        setContentView(R.layout.activity_main);
 
+        // --- Initialize Toolbar and Drawer ---
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
 
         // Enable the hamburger menu icon toggle
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this,
                 drawerLayout,
+                toolbar,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
         );
