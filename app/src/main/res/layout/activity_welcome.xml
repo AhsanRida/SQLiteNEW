@@ -18,12 +18,12 @@
             android:id="@+id/toolbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
+            android:background="#1C432A"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="Finance Dashboard"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="Finance Dashboard" />
 
         <TextView
             android:id="@+id/tvTotalIncome"
