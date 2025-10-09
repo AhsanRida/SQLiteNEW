@@ -10,5 +10,7 @@
         android:text="Finance App"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
         android:textColor="@android:color/white"/>
 </LinearLayout>
