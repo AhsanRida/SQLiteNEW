@@ -4,18 +4,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import android.util.Pair;
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.Entry;
@@ -31,21 +37,29 @@ import java.text.SimpleDateFormat;
 
 public class WelcomeActivity extends AppCompatActivity {
 
-    TextView tvTotalIncome, tvTotalExpense, tvNet, tvNetWorth;
-    Button btnAddTxn;
-    RecyclerView rvRecent;
-    DBHelper dbHelper;
-    TransactionAdapter adapter;
-    long userId;
+    private DrawerLayout drawerLayout;
+    private ImageButton btnHamburger;
+    private NavigationView navView;
 
-    LineChart chartMonthlyNet;
-    PieChart chartCategoryPie;
-    SimpleDateFormat monthFmt = new SimpleDateFormat("MMM yy", Locale.getDefault());
+    private TextView tvTotalIncome, tvTotalExpense, tvNet, tvNetWorth;
+    private Button btnAddTxn;
+    private RecyclerView rvRecent;
+    private DBHelper dbHelper;
+    private TransactionAdapter adapter;
+    private long userId;
+
+    private LineChart chartMonthlyNet;
+    private PieChart chartCategoryPie;
+    private SimpleDateFormat monthFmt = new SimpleDateFormat("MMM yy", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        btnHamburger = findViewById(R.id.btnHamburger);
+        navView = findViewById(R.id.nav_view);
 
         tvTotalIncome = findViewById(R.id.tvTotalIncome);
         tvTotalExpense = findViewById(R.id.tvTotalExpense);
@@ -61,99 +75,70 @@ public class WelcomeActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         userId = prefs.getLong("user_id", -1L);
 
-        btnAddTxn.setOnClickListener(v -> startActivity(new Intent(WelcomeActivity.this, AddTransactionActivity.class)));
+        btnAddTxn.setOnClickListener(v -> startActivity(new Intent(this, AddTransactionActivity.class)));
 
         rvRecent.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TransactionAdapter(this);
         rvRecent.setAdapter(adapter);
 
         initCharts();
+        setupHamburgerAndDrawer();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         refreshDashboard();
-
         loadCharts();
     }
 
+    private void setupHamburgerAndDrawer() {
+        btnHamburger.setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        navView.setNavigationItemSelectedListener(menuItem -> {
+            int id = menuItem.getItemId();
+            if (id == R.id.nav_home) {
+                // Already on WelcomeActivity
+            } else if (id == R.id.nav_transactions) {
+                startActivity(new Intent(this, TransactionsActivity.class));
+                finish();
+            } else if (id == R.id.nav_logout) {
+                Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginActivity.class));
+                finish();
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+    }
+
+    // -------------------- DASHBOARD METHODS --------------------
     private void refreshDashboard() {
         if (userId < 0) return;
 
-        Calendar start = Calendar.getInstance();
-        start.set(Calendar.DAY_OF_MONTH, 1);
-        start.set(Calendar.HOUR_OF_DAY, 0); start.set(Calendar.MINUTE, 0); start.set(Calendar.SECOND, 0); start.set(Calendar.MILLISECOND, 0);
-        long fromTs = start.getTimeInMillis();
-
-        Calendar end = Calendar.getInstance();
-        end.set(Calendar.HOUR_OF_DAY, 23); end.set(Calendar.MINUTE, 59); end.set(Calendar.SECOND, 59); end.set(Calendar.MILLISECOND, 999);
-        long toTs = end.getTimeInMillis();
-
-        double net = dbHelper.getNetProfit(userId, fromTs, toTs);
-
-        List<Transaction> list = dbHelper.getTransactions(userId, fromTs, toTs);
+        // Fetch transactions and calculate totals
+        List<Transaction> list = dbHelper.getTransactions(userId, 0, System.currentTimeMillis());
         double income = 0.0, expense = 0.0;
         for (Transaction t : list) {
             if (t.isExpense()) expense += t.getAmount();
             else income += t.getAmount();
         }
-        Calendar prevStart = Calendar.getInstance();
-        prevStart.add(Calendar.MONTH, -1);
-        prevStart.set(Calendar.DAY_OF_MONTH, 1);
-        prevStart.set(Calendar.HOUR_OF_DAY, 0);
-        prevStart.set(Calendar.MINUTE, 0);
-        prevStart.set(Calendar.SECOND, 0);
-        prevStart.set(Calendar.MILLISECOND, 0);
+        double net = income - expense;
 
-        Calendar prevEnd = Calendar.getInstance();
-        prevEnd.add(Calendar.MONTH, -1);
-        prevEnd.set(Calendar.DAY_OF_MONTH, prevEnd.getActualMaximum(Calendar.DAY_OF_MONTH));
-        prevEnd.set(Calendar.HOUR_OF_DAY, 23);
-        prevEnd.set(Calendar.MINUTE, 59);
-        prevEnd.set(Calendar.SECOND, 59);
-        prevEnd.set(Calendar.MILLISECOND, 999);
-
-        double prevNet = dbHelper.getNetProfit(userId, prevStart.getTimeInMillis(), prevEnd.getTimeInMillis());
-        double momPct = MathEcon.percentageIncrease(prevNet, net);
         tvTotalIncome.setText(String.format(Locale.getDefault(), "Income: %.2f", income));
         tvTotalExpense.setText(String.format(Locale.getDefault(), "Expense: %.2f", expense));
-        tvNet.setText(String.format(
-                Locale.getDefault(),
-                "Net: %.2f  (MoM: %.1f%%)",
-                net, momPct));
-        // ----- Assets & Liabilities from SharedPreferences (example keys) -----
-        SharedPreferences prefsAL = getSharedPreferences("finance_inputs", MODE_PRIVATE);
+        tvNet.setText(String.format(Locale.getDefault(), "Net: %.2f", net));
 
-// Example: read saved values (default to 0 if not set)
-        double cash        = Double.longBitsToDouble(prefsAL.getLong("assets_cash",        Double.doubleToLongBits(0)));
-        double investments = Double.longBitsToDouble(prefsAL.getLong("assets_investments", Double.doubleToLongBits(0)));
-        double property    = Double.longBitsToDouble(prefsAL.getLong("assets_property",    Double.doubleToLongBits(0)));
+        rvRecent.setAdapter(adapter);
+        adapter.setTransactions(list);
+    }
 
-        double loans       = Double.longBitsToDouble(prefsAL.getLong("liab_loans",         Double.doubleToLongBits(0)));
-        double mortgage    = Double.longBitsToDouble(prefsAL.getLong("liab_mortgage",      Double.doubleToLongBits(0)));
-        double bills       = Double.longBitsToDouble(prefsAL.getLong("liab_bills",         Double.doubleToLongBits(0)));
-
-// Totals via MathEcon helpers
-        double totalAssets      = MathEcon.totalAssets(cash, investments, property);
-        double totalLiabilities = MathEcon.totalLiabilities(loans, mortgage, bills);
-        double netWorth         = totalAssets - totalLiabilities;
-
-// Show it
-        if (tvNetWorth != null) {
-            tvNetWorth.setText(String.format(Locale.getDefault(), "Net Worth: %.2f", netWorth));
-        }
-
-        long thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
-        List<Transaction> recent = dbHelper.getTransactions(userId, thirtyDaysAgo, System.currentTimeMillis());
-        adapter.setTransactions(recent);
-
-
-}
-
-    // =======================
-    // chart helpers
-    // =======================
     private void initCharts() {
         if (chartMonthlyNet != null) {
             chartMonthlyNet.getAxisRight().setEnabled(false);
@@ -174,7 +159,6 @@ public class WelcomeActivity extends AppCompatActivity {
     private void loadCharts() {
         if (userId < 0) return;
 
-        // 1) Monthly Net (last 6 months) with 3-mo moving average
         List<Pair<Long, Double>> months = MathEcon.monthlyNetSeries(dbHelper, userId, 6);
         List<Pair<Long, Double>> ma = MathEcon.movingAverage(months, 3);
 
@@ -209,7 +193,6 @@ public class WelcomeActivity extends AppCompatActivity {
             chartMonthlyNet.invalidate();
         }
 
-        // 2) Pie: current month expenses by category
         if (chartCategoryPie != null) {
             List<Pair<String, Double>> cats = MathEcon.currentMonthCategoryExpenseModel(dbHelper, userId);
             List<PieEntry> pieEntries = new java.util.ArrayList<>();

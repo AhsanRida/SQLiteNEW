@@ -29,6 +29,8 @@
     <activity android:name=".SignUpActivity" android:exported="false"/>
     <activity android:name=".WelcomeActivity" android:exported="false"/>
     <activity android:name=".AddTransactionActivity" android:exported="false"/>
+    <activity android:name=".MainActivity" android:exported="false"/>
+
 
 
 
